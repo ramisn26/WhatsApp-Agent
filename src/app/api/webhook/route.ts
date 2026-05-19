@@ -113,7 +113,11 @@ export async function POST(request: NextRequest) {
     );
 
     // Send response via WhatsApp
-    await sendWhatsAppMessage(phone, aiResponse);
+    const whatsappResult = await sendWhatsAppMessage(phone, aiResponse);
+    if (!whatsappResult || (typeof whatsappResult === 'object' && 'error' in whatsappResult)) {
+      console.error("Failed to send WhatsApp message:", whatsappResult);
+    }
+
 
     // Store AI response
     await supabase.from("messages").insert({
