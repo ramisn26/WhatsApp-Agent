@@ -12,7 +12,7 @@ export async function getAIResponse(
   const modelSequence = [
     process.env.AI_MODEL || "anthropic/claude-3-haiku",
     "anthropic/claude-3.5-sonnet",
-    "anthropic/claude-3-sonnet",
+    "anthropic/claude-3-opus",
     "google/gemini-pro-1.5"
   ];
 
