@@ -9,8 +9,8 @@ const openai = new OpenAI({
 export async function getAIResponse(
   messages: { role: "user" | "assistant"; content: string }[]
 ) {
-  const primaryModel = process.env.AI_MODEL || "anthropic/claude-3-haiku-20240313";
-  const fallbackModel = "anthropic/claude-3-5-sonnet-20240620";
+  const primaryModel = process.env.AI_MODEL || "anthropic/claude-3-haiku";
+  const fallbackModel = "anthropic/claude-3.5-sonnet";
 
   async function callModel(model: string) {
     const completion = await openai.chat.completions.create({
