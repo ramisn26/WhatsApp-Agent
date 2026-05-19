@@ -72,17 +72,19 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "Failed to create conversation" }, { status: 500 });
     }
 
-    // Store user message (ignore duplicates)
-    const { error: insertError } = await supabase.from("messages").insert({
+    // Store user message (use upsert to avoid duplicate key errors)
+    const { error: insertError } = await supabase.from("messages").upsert({
       conversation_id: conversation.id,
       role: "user",
       content: text,
       whatsapp_msg_id: whatsappMsgId,
+    }, {
+      onConflict: 'whatsapp_msg_id'
     });
 
-    if (insertError?.code === "23505") {
-      // Duplicate message, ignore
-      return Response.json({ status: "duplicate" });
+    if (insertError) {
+      console.error("Error upserting user message:", insertError);
+      return Response.json({ error: "Failed to store message" }, { status: 500 });
     }
 
     // Update conversation timestamp
