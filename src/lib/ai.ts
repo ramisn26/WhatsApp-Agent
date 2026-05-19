@@ -9,8 +9,12 @@ const openai = new OpenAI({
 export async function getAIResponse(
   messages: { role: "user" | "assistant"; content: string }[]
 ) {
-  const primaryModel = process.env.AI_MODEL || "anthropic/claude-3-haiku";
-  const fallbackModel = "anthropic/claude-3.5-sonnet";
+  const modelSequence = [
+    process.env.AI_MODEL || "anthropic/claude-3-haiku",
+    "anthropic/claude-3.5-sonnet",
+    "anthropic/claude-3-sonnet",
+    "google/gemini-pro-1.5"
+  ];
 
   async function callModel(model: string) {
     const completion = await openai.chat.completions.create({
@@ -26,26 +30,24 @@ export async function getAIResponse(
     return completion.choices[0]?.message?.content;
   }
 
-  try {
-    console.log(`Attempting AI response with model: ${primaryModel}`);
-    let content = await callModel(primaryModel);
+  for (let i = 0; i < modelSequence.length; i++) {
+    const currentModel = modelSequence[i];
+    try {
+      console.log(`Attempting AI response with model: ${currentModel} (Attempt ${i + 1}/${modelSequence.length})`);
+      const content = await callModel(currentModel);
 
-    if (!content || content.trim() === "") {
-      console.warn(`Primary model ${primaryModel} returned empty content. Trying fallback: ${fallbackModel}`);
-      content = await callModel(fallbackModel);
+      if (content && content.trim() !== "") {
+        return content;
+      }
+      console.warn(`Model ${currentModel} returned empty content.`);
+    } catch (error: any) {
+      console.error(`Model ${currentModel} failed:`, {
+        message: error.message,
+        status: error.status,
+      });
+      // Continue to the next model in the sequence
     }
-
-    if (!content || content.trim() === "") {
-      console.error("Both primary and fallback models returned empty content.");
-    }
-
-    return content || "Sorry, I couldn't generate a response. Please try again in a moment.";
-  } catch (error: any) {
-    console.error("AI Generation Error:", {
-      message: error.message,
-      status: error.status,
-      code: error.code,
-    });
-    return `AI Error: ${error.message || "An unexpected error occurred."}`;
   }
+
+  return "Sorry, I'm having trouble connecting to my AI brain right now. Please try again in a few minutes!";
 }
